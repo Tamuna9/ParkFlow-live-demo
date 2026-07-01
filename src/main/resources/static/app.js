@@ -335,6 +335,8 @@ ui.parkingLevels.addEventListener("dblclick", event => {
 });
 
 request("/api/state")
-    .then(renderState)
+    .then(state => {
+        renderState(state);
+        connectStream();
+    })
     .catch(error => showToast(error.message, true));
-connectStream();
