@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="ParkFlow — a real-time multi-threaded parking simulator built with Java and Spring Boot.">
+    <title>ParkFlow · Live Parking Simulator</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="app-shell">
+    <header class="topbar">
+        <a class="brand" href="/" aria-label="ParkFlow home">
+            <span class="brand-mark">P</span>
+            <span>
+                <strong>ParkFlow</strong>
+                <small>LIVE PARKING SIMULATOR</small>
+            </span>
+        </a>
+        <div class="topbar-meta">
+            <span class="clock-note">1 second = 2 simulation minutes</span>
+            <span id="connectionBadge" class="connection-badge connecting">
+                <i></i><span>Connecting</span>
+            </span>
+            <span id="statusBadge" class="status-badge ready">Ready</span>
+        </div>
+    </header>
+
+    <aside class="sidebar">
+        <section>
+            <h2 class="eyebrow">Simulation</h2>
+            <div class="button-stack">
+                <button id="startButton" class="button primary" type="button">
+                    <span>▶</span> Start simulation
+                </button>
+                <button id="pauseButton" class="button secondary" type="button" disabled>
+                    <span>Ⅱ</span> Pause
+                </button>
+                <button id="resetButton" class="button ghost" type="button">
+                    <span>↻</span> Reset
+                </button>
+            </div>
+        </section>
+
+        <section class="control-section">
+            <div class="control-heading">
+                <label for="speedRange">Traffic flow</label>
+                <output id="speedOutput" for="speedRange">1.0×</output>
+            </div>
+            <input id="speedRange" type="range" min="0.5" max="3" value="1" step="0.5">
+            <div class="range-labels"><span>Calm</span><span>Rush hour</span></div>
+        </section>
+
+        <section class="control-section">
+            <h2 class="eyebrow">Manual entry</h2>
+            <label class="sr-only" for="vehicleType">Vehicle type</label>
+            <select id="vehicleType">
+                <option value="CAR">🚗 Car</option>
+                <option value="ELECTRIC">⚡ Electric vehicle</option>
+                <option value="MOTORCYCLE">🏍 Motorcycle</option>
+                <option value="ACCESSIBLE">♿ Accessible vehicle</option>
+            </select>
+            <label class="vip-toggle">
+                <input id="vipCheck" type="checkbox">
+                <span class="toggle-ui"></span>
+                <span>VIP priority</span>
+            </label>
+            <button id="addVehicleButton" class="button accent" type="button">+ Add vehicle</button>
+        </section>
+
+        <section class="control-section legend-section">
+            <h2 class="eyebrow">Spot types</h2>
+            <ul class="legend">
+                <li><i class="dot regular"></i>Regular</li>
+                <li><i class="dot electric"></i>EV charging</li>
+                <li><i class="dot motorcycle"></i>Motorcycle</li>
+                <li><i class="dot accessible"></i>Accessible</li>
+            </ul>
+        </section>
+
+        <button id="historyButton" class="button history-button" type="button">
+            <span>↗</span> History & receipts
+        </button>
+    </aside>
+
+    <main class="workspace">
+        <section class="workspace-heading">
+            <div>
+                <p class="eyebrow">Real-time operations</p>
+                <h1>Parking control center</h1>
+                <p>Double-click an occupied spot to check out the vehicle.</p>
+            </div>
+            <div class="occupancy-summary">
+                <span>Current occupancy</span>
+                <strong id="occupancyHeadline">0%</strong>
+            </div>
+        </section>
+
+        <section class="stats-grid" aria-label="Parking statistics">
+            <article class="stat-card blue">
+                <span>Occupied</span>
+                <strong id="occupiedStat">0 / 36</strong>
+                <small>parking spaces</small>
+            </article>
+            <article class="stat-card amber">
+                <span>Entrance queue</span>
+                <strong id="queueStat">0</strong>
+                <small>vehicles waiting</small>
+            </article>
+            <article class="stat-card green">
+                <span>Completed</span>
+                <strong id="completedStat">0</strong>
+                <small>parking sessions</small>
+            </article>
+            <article class="stat-card violet">
+                <span>Revenue</span>
+                <strong id="revenueStat">0.00</strong>
+                <small>GEL collected</small>
+            </article>
+            <article class="stat-card red">
+                <span>Rejected</span>
+                <strong id="rejectedStat">0</strong>
+                <small>queue overflow</small>
+            </article>
+        </section>
+
+        <div class="progress-track" aria-label="Parking occupancy">
+            <span id="occupancyProgress"></span>
+        </div>
+
+        <section id="parkingLevels" class="parking-levels" aria-live="polite"></section>
+    </main>
+
+    <aside class="activity-column">
+        <section class="panel queue-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">Live</p>
+                    <h2>Entrance queue</h2>
+                </div>
+                <span id="queueBadge" class="count-badge">0</span>
+            </div>
+            <div id="queueList" class="queue-list">
+                <div class="empty-state">No vehicles are waiting</div>
+            </div>
+        </section>
+
+        <section class="panel event-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">Thread activity</p>
+                    <h2>Event stream</h2>
+                </div>
+                <span class="live-dot" title="Live updates"></span>
+            </div>
+            <div id="eventList" class="event-list">
+                <div class="empty-state">Events appear when the simulation starts</div>
+            </div>
+        </section>
+    </aside>
+</div>
+
+<dialog id="historyDialog" class="history-dialog">
+    <div class="dialog-heading">
+        <div>
+            <p class="eyebrow">Session records</p>
+            <h2>Parking history</h2>
+        </div>
+        <button id="closeHistoryButton" class="icon-button" type="button" aria-label="Close">×</button>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>License plate</th>
+                <th>Vehicle</th>
+                <th>Spot</th>
+                <th>Duration</th>
+                <th>Cost</th>
+            </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+        </table>
+        <div id="historyEmpty" class="empty-state large">No completed parking sessions yet</div>
+    </div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="/app.js" defer></script>
+</body>
+</html>
