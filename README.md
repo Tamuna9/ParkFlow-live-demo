@@ -4,6 +4,10 @@ ParkFlow Live Demo is the browser edition of the JavaFX desktop project. It is
 a real-time, multi-threaded parking simulator built with Java 21 and Spring
 Boot 4.1. The desktop application remains a separate project.
 
+**[Open the live demo](https://parkflow-live-demo.onrender.com)**
+
+![ParkFlow dashboard](docs/parkflow-preview.png)
+
 ## Live-demo features
 
 - responsive English dashboard that runs in any modern browser;
